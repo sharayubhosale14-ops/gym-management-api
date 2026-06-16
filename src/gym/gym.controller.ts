@@ -1,5 +1,6 @@
 import { Controller, Get, Post, Body, Param } from '@nestjs/common';
 import { GymService } from './gym.service';
+import { CreateGymDto } from './dto/create-gym.dto';
 
 @Controller('gym')
 export class GymController {
@@ -11,9 +12,9 @@ export class GymController {
   }
 
   @Post()
-  addGym(@Body() gym: any) {
-    console.log('Request Body:', gym);
-    return this.gymService.addGym(gym);
+  addGym(@Body() createGymDto: CreateGymDto) {
+    console.log('Request Body:', createGymDto);
+    return this.gymService.addGym(createGymDto);
   }
 
   @Get(':id')
