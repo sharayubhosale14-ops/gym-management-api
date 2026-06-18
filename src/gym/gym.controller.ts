@@ -1,4 +1,4 @@
-import { Controller, Get, Post, Body, Param } from '@nestjs/common';
+import { Controller, Get, Post, Body, Param, Query } from '@nestjs/common';
 import { GymService } from './gym.service';
 import { CreateGymDto } from './dto/create-gym.dto';
 
@@ -15,6 +15,12 @@ export class GymController {
   addGym(@Body() createGymDto: CreateGymDto) {
     console.log('Request Body:', createGymDto);
     return this.gymService.addGym(createGymDto);
+  }
+
+  @Get('search')
+  searchGym(@Query('location') location: string) {
+    console.log('Query Param:', location);
+    return this.gymService.searchGymByLocation(location);
   }
 
   @Get(':id')

@@ -26,6 +26,12 @@ export class GymService {
     };
   }
 
+  searchGymByLocation(location: string) {
+    return this.gyms.filter(
+      (gym) => gym.location.toLowerCase() === location.toLowerCase(),
+    );
+  }
+
   getGymById(id: number) {
     return this.gyms.find((gym) => gym.id === id);
   }
