@@ -2,10 +2,6 @@ import { IsNotEmpty, IsNumber, IsString } from 'class-validator';
 import { Type } from 'class-transformer';
 
 export class CreateGymDto {
-  @Type(() => Number)
-  @IsNumber()
-  id!: number;
-
   @IsString()
   @IsNotEmpty()
   name!: string;
@@ -13,4 +9,12 @@ export class CreateGymDto {
   @IsString()
   @IsNotEmpty()
   location!: string;
+
+  @IsString()
+  @IsNotEmpty()
+  trainer!: string;
+
+  @Type(() => Number)
+  @IsNumber()
+  members!: number;
 }

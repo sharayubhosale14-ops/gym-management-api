@@ -1,4 +1,14 @@
-import { Controller, Get, Post, Body, Param, Query } from '@nestjs/common';
+import {
+  Controller,
+  Get,
+  Post,
+  Patch,
+  Delete,
+  Body,
+  Param,
+  Query,
+} from '@nestjs/common';
+
 import { GymService } from './gym.service';
 import { CreateGymDto } from './dto/create-gym.dto';
 
@@ -13,19 +23,32 @@ export class GymController {
 
   @Post()
   addGym(@Body() createGymDto: CreateGymDto) {
-    console.log('Request Body:', createGymDto);
     return this.gymService.addGym(createGymDto);
   }
 
   @Get('search')
   searchGym(@Query('location') location: string) {
-    console.log('Query Param:', location);
     return this.gymService.searchGymByLocation(location);
   }
 
   @Get(':id')
   getGymById(@Param('id') id: string) {
-    console.log('Route Param:', id);
-    return this.gymService.getGymById(Number(id));
+    return this.gymService.getGymById(id);
+  }
+
+  @Patch(':id')
+  updateGym(
+    @Param('id') id: string,
+    @Body() updateGymDto: any,
+  ) {
+    return this.gymService.updateGym(
+      id,
+      updateGymDto,
+    );
+  }
+
+  @Delete(':id')
+  deleteGym(@Param('id') id: string) {
+    return this.gymService.deleteGym(id);
   }
 }

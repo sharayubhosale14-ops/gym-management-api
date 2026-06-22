@@ -1,38 +1,51 @@
 import { Injectable } from '@nestjs/common';
+import { InjectModel } from '@nestjs/mongoose';
+import { Model } from 'mongoose';
+
+import { Gym, GymDocument } from './schemas/gym.schema';
 
 @Injectable()
 export class GymService {
-  private gyms = [
-    {
-      id: 1,
-      name: 'Gold Gym',
-      location: 'Mumbai',
-    },
-    {
-      id: 2,
-      name: 'Fitness Hub',
-      location: 'Pune',
-    },
-  ];
+  constructor(
+    @InjectModel(Gym.name)
+    private gymModel: Model<GymDocument>,
+  ) {}
 
-  getAllGyms() {
-    return this.gyms;
+  async getAllGyms() {
+    return this.gymModel.find();
   }
 
-  addGym(gym: any) {
-    this.gyms.push(gym);
+  async addGym(gym: any) {
+    const newGym = await this.gymModel.create(gym);
+
     return {
       message: 'Gym added successfully',
+      data: newGym,
     };
   }
 
-  searchGymByLocation(location: string) {
-    return this.gyms.filter(
-      (gym) => gym.location.toLowerCase() === location.toLowerCase(),
+  async searchGymByLocation(location: string) {
+    return this.gymModel.find({
+      location: {
+        $regex: location,
+        $options: 'i',
+      },
+    });
+  }
+
+  async getGymById(id: string) {
+    return this.gymModel.findById(id);
+  }
+
+  async updateGym(id: string, gym: any) {
+    return this.gymModel.findByIdAndUpdate(
+      id,
+      gym,
+      { new: true },
     );
   }
 
-  getGymById(id: number) {
-    return this.gyms.find((gym) => gym.id === id);
+  async deleteGym(id: string) {
+    return this.gymModel.findByIdAndDelete(id);
   }
 }
