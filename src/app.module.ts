@@ -6,6 +6,7 @@ import * as Joi from 'joi';
 import { AppController } from './app.controller';
 import { AppService } from './app.service';
 import { GymModule } from './gym/gym.module';
+import { AuthModule } from './auth/auth.module';
 
 @Module({
   imports: [
@@ -14,10 +15,11 @@ import { GymModule } from './gym/gym.module';
       envFilePath: '.env.development',
 
       validationSchema: Joi.object({
-        PORT: Joi.number().required(),
-        APP_NAME: Joi.string().required(),
-        MONGO_URI: Joi.string().required(),
-      }),
+  PORT: Joi.number().required(),
+  APP_NAME: Joi.string().required(),
+  MONGO_URI: Joi.string().required(),
+  JWT_SECRET: Joi.string().required(),
+}),
     }),
 
     MongooseModule.forRootAsync({
@@ -29,6 +31,8 @@ import { GymModule } from './gym/gym.module';
     }),
 
     GymModule,
+
+    AuthModule,
   ],
 
   controllers: [AppController],
