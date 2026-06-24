@@ -10,22 +10,23 @@ export class Gym {
   @Prop({
     required: true,
   })
-  name: string;
+  name!: string;
+
+  @Prop({
+  required: true,
+  index: true,
+})
+location!: string;
 
   @Prop({
     required: true,
   })
-  location: string;
+  trainer!: string;
 
   @Prop({
     required: true,
   })
-  trainer: string;
-
-  @Prop({
-    required: true,
-  })
-  members: number;
+  members!: number;
 }
 
 export const GymSchema =

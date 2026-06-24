@@ -3,7 +3,7 @@ import { MongooseModule } from '@nestjs/mongoose';
 
 import { GymController } from './gym.controller';
 import { GymService } from './gym.service';
-
+import { GymGateway } from './gym.gateway';
 import { Gym, GymSchema } from './schemas/gym.schema';
 
 @Module({
@@ -16,6 +16,6 @@ import { Gym, GymSchema } from './schemas/gym.schema';
     ]),
   ],
   controllers: [GymController],
-  providers: [GymService],
+  providers: [GymService, GymGateway],
 })
 export class GymModule {}

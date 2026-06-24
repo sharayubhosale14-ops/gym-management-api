@@ -11,9 +11,40 @@ export class GymService {
     private gymModel: Model<GymDocument>,
   ) {}
 
-  async getAllGyms() {
-    return this.gymModel.find();
+  async getAllGyms(
+  page = 1,
+  limit = 10,
+  location?: string,
+  sortBy = 'createdAt',
+  order = 'desc',
+) {
+  const skip = (page - 1) * limit;
+
+  const filter: any = {};
+
+  if (location) {
+    filter.location = {
+      $regex: location,
+      $options: 'i',
+    };
   }
+
+  const gyms = await this.gymModel
+    .find(filter)
+    .sort({ [sortBy]: order === 'asc' ? 1 : -1 })
+    .skip(skip)
+    .limit(limit);
+
+  const total = await this.gymModel.countDocuments(filter);
+
+  return {
+    total,
+    page,
+    limit,
+    totalPages: Math.ceil(total / limit),
+    data: gyms,
+  };
+}
 
   async addGym(gym: any) {
     const newGym = await this.gymModel.create(gym);
@@ -44,7 +75,27 @@ export class GymService {
       { new: true },
     );
   }
+  async getAnalytics() {
+  const gyms = await this.gymModel.find();
 
+  const totalGyms = gyms.length;
+
+  const totalMembers = gyms.reduce(
+    (sum, gym) => sum + gym.members,
+    0,
+  );
+
+  const averageMembers =
+    totalGyms === 0
+      ? 0
+      : Math.round(totalMembers / totalGyms);
+
+  return {
+    totalGyms,
+    totalMembers,
+    averageMembers,
+  };
+}
   async deleteGym(id: string) {
     return this.gymModel.findByIdAndDelete(id);
   }

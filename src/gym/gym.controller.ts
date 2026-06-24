@@ -17,9 +17,21 @@ export class GymController {
   constructor(private readonly gymService: GymService) {}
 
   @Get()
-  getAllGyms() {
-    return this.gymService.getAllGyms();
-  }
+getAllGyms(
+  @Query('page') page?: string,
+  @Query('limit') limit?: string,
+  @Query('location') location?: string,
+  @Query('sortBy') sortBy?: string,
+  @Query('order') order?: string,
+) {
+  return this.gymService.getAllGyms(
+    Number(page) || 1,
+    Number(limit) || 10,
+    location,
+    sortBy,
+    order,
+  );
+}
 
   @Post()
   addGym(@Body() createGymDto: CreateGymDto) {
@@ -30,7 +42,10 @@ export class GymController {
   searchGym(@Query('location') location: string) {
     return this.gymService.searchGymByLocation(location);
   }
-
+  @Get('analytics')
+getAnalytics() {
+  return this.gymService.getAnalytics();
+}
   @Get(':id')
   getGymById(@Param('id') id: string) {
     return this.gymService.getGymById(id);
