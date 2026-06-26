@@ -1,7 +1,11 @@
 import { Prop, Schema, SchemaFactory } from '@nestjs/mongoose';
-import { Document } from 'mongoose';
+import {
+  Schema as MongooseSchema,
+  HydratedDocument,
+  Types,
+} from 'mongoose';
 
-export type UserDocument = User & Document;
+export type UserDocument = HydratedDocument<User>;
 
 @Schema({
   timestamps: true,
@@ -28,6 +32,17 @@ export class User {
     enum: ['user', 'admin'],
   })
   role!: string;
+
+  @Prop({
+    type: MongooseSchema.Types.ObjectId,
+    ref: 'Gym',
+    default: null,
+    index: true,
+  })
+  gymId?: Types.ObjectId;
 }
 
 export const UserSchema = SchemaFactory.createForClass(User);
+
+UserSchema.index({ email: 1 });
+UserSchema.index({ role: 1 });

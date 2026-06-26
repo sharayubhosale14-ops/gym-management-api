@@ -1,5 +1,9 @@
 import { Prop, Schema, SchemaFactory } from '@nestjs/mongoose';
-import { HydratedDocument } from 'mongoose';
+import {
+  Schema as MongooseSchema,
+  HydratedDocument,
+  Types,
+} from 'mongoose';
 
 export type GymDocument = HydratedDocument<Gym>;
 
@@ -13,21 +17,30 @@ export class Gym {
   name!: string;
 
   @Prop({
-  required: true,
-  index: true,
-})
-location!: string;
-
-  @Prop({
     required: true,
   })
-  trainer!: string;
+  location!: string;
 
+  // owner of gym (admin/user who created it)
   @Prop({
-    required: true,
+    type: MongooseSchema.Types.ObjectId,
+    ref: 'User',
+    index: true,
   })
-  members!: number;
+  ownerId?: Types.ObjectId;
+
+  // list of memberships
+  @Prop({
+    type: [MongooseSchema.Types.ObjectId],
+    ref: 'Membership',
+    default: [],
+  })
+  memberships!: Types.ObjectId[];
 }
 
-export const GymSchema =
-  SchemaFactory.createForClass(Gym);
+export const GymSchema = SchemaFactory.createForClass(Gym);
+
+// 🚀 INDEXING (IMPORTANT FOR PERFORMANCE)
+GymSchema.index({ location: 1 });
+GymSchema.index({ name: 1 });
+GymSchema.index({ location: 1, name: 1 });

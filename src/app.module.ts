@@ -15,11 +15,11 @@ import { AuthModule } from './auth/auth.module';
       envFilePath: '.env.development',
 
       validationSchema: Joi.object({
-  PORT: Joi.number().required(),
-  APP_NAME: Joi.string().required(),
-  MONGO_URI: Joi.string().required(),
-  JWT_SECRET: Joi.string().required(),
-}),
+        PORT: Joi.number().required(),
+        APP_NAME: Joi.string().required(),
+        MONGO_URI: Joi.string().required(),
+        JWT_SECRET: Joi.string().required(),
+      }),
     }),
 
     MongooseModule.forRootAsync({

@@ -6,8 +6,8 @@ import { AppModule } from './app.module';
 
 async function bootstrap() {
   const app = await NestFactory.create(AppModule);
-app.use(helmet());
-app.enableCors();
+  app.use(helmet());
+  app.enableCors();
   app.useGlobalPipes(
     new ValidationPipe({
       transform: true,
@@ -31,10 +31,7 @@ app.enableCors();
     )
     .build();
 
-  const document = SwaggerModule.createDocument(
-    app,
-    config,
-  );
+  const document = SwaggerModule.createDocument(app, config);
 
   SwaggerModule.setup('api', app, document);
 

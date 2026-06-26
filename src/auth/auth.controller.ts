@@ -1,15 +1,5 @@
-import {
-  Body,
-  Controller,
-  Get,
-  Post,
-  UseGuards,
-} from '@nestjs/common';
-import {
-  ApiBearerAuth,
-  ApiOperation,
-  ApiTags,
-} from '@nestjs/swagger';
+import { Body, Controller, Get, Post, UseGuards } from '@nestjs/common';
+import { ApiBearerAuth, ApiOperation, ApiTags } from '@nestjs/swagger';
 
 import { AuthService } from './auth.service';
 import { RegisterDto } from './dto/register.dto';
@@ -24,17 +14,13 @@ import { Roles } from './decorators/roles.decorator';
 @ApiTags('Authentication')
 @Controller('auth')
 export class AuthController {
-  constructor(
-    private readonly authService: AuthService,
-  ) {}
+  constructor(private readonly authService: AuthService) {}
 
   @Post('register')
   @ApiOperation({
     summary: 'Register a new user',
   })
-  async register(
-    @Body() registerDto: RegisterDto,
-  ) {
+  async register(@Body() registerDto: RegisterDto) {
     return this.authService.register(registerDto);
   }
 
@@ -42,9 +28,7 @@ export class AuthController {
   @ApiOperation({
     summary: 'Login user',
   })
-  async login(
-    @Body() loginDto: LoginDto,
-  ) {
+  async login(@Body() loginDto: LoginDto) {
     return this.authService.login(loginDto);
   }
 
@@ -55,11 +39,7 @@ export class AuthController {
     summary: 'Get current user profile',
   })
   getProfile(
-    @CurrentUser() user: {
-      userId: string;
-      email: string;
-      role: string;
-    },
+    @CurrentUser() user: { userId: string; email: string; role: string },
   ) {
     return {
       success: true,

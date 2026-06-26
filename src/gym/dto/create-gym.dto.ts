@@ -1,5 +1,4 @@
-import { IsNotEmpty, IsNumber, IsString } from 'class-validator';
-import { Type } from 'class-transformer';
+import { IsMongoId, IsNotEmpty, IsOptional, IsString } from 'class-validator';
 
 export class CreateGymDto {
   @IsString()
@@ -10,11 +9,7 @@ export class CreateGymDto {
   @IsNotEmpty()
   location!: string;
 
-  @IsString()
-  @IsNotEmpty()
-  trainer!: string;
-
-  @Type(() => Number)
-  @IsNumber()
-  members!: number;
+  @IsOptional()
+  @IsMongoId()
+  ownerId?: string;
 }

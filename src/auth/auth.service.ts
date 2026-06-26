@@ -1,8 +1,4 @@
-import {
-  BadRequestException,
-  Injectable,
-  Logger,
-} from '@nestjs/common';
+import { BadRequestException, Injectable, Logger } from '@nestjs/common';
 import { InjectModel } from '@nestjs/mongoose';
 import { JwtService } from '@nestjs/jwt';
 import { Model } from 'mongoose';
@@ -32,10 +28,7 @@ export class AuthService {
         throw new BadRequestException('Email already exists');
       }
 
-      const hashedPassword = await bcrypt.hash(
-        registerDto.password,
-        10,
-      );
+      const hashedPassword = await bcrypt.hash(registerDto.password, 10);
 
       const user = await this.userModel.create({
         ...registerDto,
@@ -83,9 +76,7 @@ export class AuthService {
         role: user.role,
       };
 
-      const accessToken = await this.jwtService.signAsync(
-        payload,
-      );
+      const accessToken = await this.jwtService.signAsync(payload);
 
       return {
         success: true,
