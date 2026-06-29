@@ -12,7 +12,8 @@ import {
 import { GymService } from './gym.service';
 import { CreateGymDto } from './dto/create-gym.dto';
 import { CreateMembershipDto } from './dto/create-membership.dto';
-
+import { UpdateGymDto } from './dto/update-gym.dto';
+import { UpdateManyGymDto } from './dto/update-many-gym.dto';
 @Controller('gym')
 export class GymController {
   constructor(private readonly gymService: GymService) {}
@@ -61,6 +62,16 @@ export class GymController {
     return this.gymService.getQueryPerformance(location);
   }
 
+  @Get('debug/lean-comparison')
+  compareLeanPerformance(@Query('location') location?: string) {
+    return this.gymService.compareLeanPerformance(location);
+  }
+
+  @Get('debug/execution-time')
+  getQueryExecutionTime(@Query('location') location?: string) {
+    return this.gymService.getQueryExecutionTime(location);
+  }
+
   @Get(':id/relationships')
   getRelationshipData(@Param('id') id: string) {
     return this.gymService.getRelationshipData(id);
@@ -71,12 +82,18 @@ export class GymController {
     return this.gymService.getGymById(id);
   }
 
+  @Patch('update/location')
+  updateManyGyms(@Body() updateManyGymDto: UpdateManyGymDto) {
+    return this.gymService.updateManyGyms(updateManyGymDto);
+  }
+
   @Patch(':id')
-  updateGym(
-    @Param('id') id: string,
-    @Body() updateGymDto: Partial<CreateGymDto>,
-  ) {
+  updateGym(@Param('id') id: string, @Body() updateGymDto: UpdateGymDto) {
     return this.gymService.updateGym(id, updateGymDto);
+  }
+  @Delete('delete/location')
+  deleteManyGyms(@Query('location') location: string) {
+    return this.gymService.deleteManyGyms(location);
   }
 
   @Delete(':id')

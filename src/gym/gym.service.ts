@@ -1,12 +1,13 @@
 import { Injectable, NotFoundException } from '@nestjs/common';
 import { InjectModel } from '@nestjs/mongoose';
-import { Model, Types } from 'mongoose';
+import { Model, QueryFilter, Types } from 'mongoose';
 
 import { CreateGymDto } from './dto/create-gym.dto';
 import { CreateMembershipDto } from './dto/create-membership.dto';
 import { Gym } from './schemas/gym.schema';
 import { Membership } from './schemas/membership.schema';
-
+import { UpdateGymDto } from './dto/update-gym.dto';
+import { UpdateManyGymDto } from './dto/update-many-gym.dto';
 @Injectable()
 export class GymService {
   constructor(
@@ -25,7 +26,7 @@ export class GymService {
   ) {
     const skip = (page - 1) * limit;
 
-    const filter: Record<string, unknown> = {};
+    const filter: QueryFilter<Gym> = {};
 
     if (location) {
       filter.location = {
@@ -36,11 +37,13 @@ export class GymService {
 
     const gyms = await this.gymModel
       .find(filter)
+      .select('name location ownerId memberships createdAt updatedAt')
       .populate('ownerId', 'name email role')
-      .populate('memberships')
+      .populate('memberships', 'planName price status startDate endDate')
       .sort({ [sortBy]: order === 'asc' ? 1 : -1 })
       .skip(skip)
-      .limit(limit);
+      .limit(limit)
+      .lean();
 
     const total = await this.gymModel.countDocuments(filter);
 
@@ -56,7 +59,7 @@ export class GymService {
   async addGym(gym: CreateGymDto) {
     const gymData: Partial<Gym> = {
       ...gym,
-     ownerId: gym.ownerId ? gym.ownerId as any : undefined,
+      ownerId: gym.ownerId ? (gym.ownerId as any) : undefined,
     };
 
     const newGym = new this.gymModel(gymData);
@@ -77,20 +80,25 @@ export class GymService {
           $options: 'i',
         },
       })
-      .populate('ownerId', 'name email role');
+      .select('name location ownerId')
+      .populate('ownerId', 'name email role')
+      .lean();
   }
 
   async getGymById(id: string) {
     const gym = await this.gymModel
       .findById(id)
+      .select('name location ownerId memberships createdAt updatedAt')
       .populate('ownerId', 'name email role')
       .populate({
         path: 'memberships',
+        select: 'planName price status startDate endDate userId',
         populate: {
           path: 'userId',
           select: 'name email role',
         },
-      });
+      })
+      .lean();
 
     if (!gym) {
       throw new NotFoundException('Gym not found');
@@ -99,20 +107,63 @@ export class GymService {
     return gym;
   }
 
-  async updateGym(id: string, gym: Partial<CreateGymDto>) {
+  async updateGym(id: string, gym: UpdateGymDto) {
     const gymData: Partial<Gym> = {
       ...gym,
-     ownerId: gym.ownerId ? (gym.ownerId as any) : undefined,
+      ownerId: gym.ownerId ? (gym.ownerId as any) : undefined,
     };
 
-    return this.gymModel
-      .findByIdAndUpdate(id, gymData, { new: true })
+    const updatedGym = await this.gymModel
+      .findOneAndUpdate({ _id: id }, gymData, {
+        new: true,
+      })
+      .select('name location ownerId memberships createdAt updatedAt')
       .populate('ownerId', 'name email role')
-      .populate('memberships');
+      .populate('memberships', 'planName price status startDate endDate')
+      .lean();
+
+    if (!updatedGym) {
+      throw new NotFoundException('Gym not found');
+    }
+
+    return {
+      message: 'Gym updated successfully',
+      data: updatedGym,
+    };
+  }
+
+  async updateManyGyms(updateManyGymDto: UpdateManyGymDto) {
+    const result = await this.gymModel.updateMany(
+      {
+        location: updateManyGymDto.oldLocation,
+      },
+      {
+        $set: {
+          location: updateManyGymDto.newLocation,
+        },
+      },
+    );
+
+    return {
+      message: 'Gyms updated successfully',
+      matchedCount: result.matchedCount,
+      modifiedCount: result.modifiedCount,
+    };
+  }
+
+  async deleteManyGyms(location: string) {
+    const result = await this.gymModel.deleteMany({
+      location,
+    });
+
+    return {
+      message: 'Gyms deleted successfully',
+      deletedCount: result.deletedCount,
+    };
   }
 
   async addMembership(gymId: string, membershipDto: CreateMembershipDto) {
-    const gym = await this.gymModel.findById(gymId);
+    const gym = await this.gymModel.findById(gymId).select('_id').lean();
 
     if (!gym) {
       throw new NotFoundException('Gym not found');
@@ -153,7 +204,7 @@ export class GymService {
   }
 
   async getQueryPerformance(location?: string) {
-    const filter = location
+    const filter: QueryFilter<Gym> = location
       ? {
           location: {
             $regex: location,
@@ -162,18 +213,61 @@ export class GymService {
         }
       : {};
 
-    return this.gymModel.find(filter).explain('executionStats');
+    return this.gymModel
+      .find(filter)
+      .select('name location ownerId')
+      .lean()
+      .explain('executionStats');
+  }
+
+  async compareLeanPerformance(location?: string) {
+    const filter = this.createLocationFilter(location);
+
+    const hydrated = await this.measureQueryTime(() =>
+      this.gymModel
+        .find(filter)
+        .select('name location ownerId')
+        .limit(100)
+        .exec(),
+    );
+
+    const lean = await this.measureQueryTime(() =>
+      this.gymModel
+        .find(filter)
+        .select('name location ownerId')
+        .limit(100)
+        .lean()
+        .exec(),
+    );
+
+    return {
+      hydratedQuery: hydrated,
+      leanQuery: lean,
+      fasterByMs: Number(
+        (hydrated.executionTimeMs - lean.executionTimeMs).toFixed(3),
+      ),
+    };
+  }
+
+  async getQueryExecutionTime(location?: string) {
+    const filter = this.createLocationFilter(location);
+
+    return this.measureQueryTime(() =>
+      this.gymModel
+        .find(filter)
+        .select('name location ownerId memberships')
+        .populate('ownerId', 'name email role')
+        .limit(100)
+        .lean()
+        .exec(),
+    );
   }
 
   async getAnalytics() {
-    const gyms = await this.gymModel.find().populate('memberships');
-
-    const totalGyms = gyms.length;
-
-    const totalMembers = gyms.reduce(
-      (sum, gym) => sum + (gym.memberships?.length || 0),
-      0,
-    );
+    const [totalGyms, totalMembers] = await Promise.all([
+      this.gymModel.countDocuments(),
+      this.membershipModel.countDocuments(),
+    ]);
 
     const averageMembers =
       totalGyms === 0 ? 0 : Math.round(totalMembers / totalGyms);
@@ -195,5 +289,31 @@ export class GymService {
     }
 
     return deletedGym;
+  }
+
+  private createLocationFilter(location?: string): QueryFilter<Gym> {
+    if (!location) {
+      return {};
+    }
+
+    return {
+      location: {
+        $regex: location,
+        $options: 'i',
+      },
+    };
+  }
+
+  private async measureQueryTime<T>(queryFactory: () => Promise<T[]>) {
+    const startedAt = process.hrtime.bigint();
+    const data = await queryFactory();
+    const endedAt = process.hrtime.bigint();
+    const executionTimeMs = Number(endedAt - startedAt) / 1_000_000;
+
+    return {
+      executionTimeMs: Number(executionTimeMs.toFixed(3)),
+      resultCount: data.length,
+      data,
+    };
   }
 }
