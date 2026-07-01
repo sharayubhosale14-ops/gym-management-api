@@ -1,6 +1,6 @@
 import { Module } from '@nestjs/common';
 import { ConfigModule, ConfigService } from '@nestjs/config';
-import { APP_FILTER, APP_INTERCEPTOR } from '@nestjs/core';
+import { APP_FILTER, APP_GUARD, APP_INTERCEPTOR } from '@nestjs/core';
 import { MongooseModule } from '@nestjs/mongoose';
 import * as Joi from 'joi';
 
@@ -10,7 +10,7 @@ import { GymModule } from './gym/gym.module';
 import { AuthModule } from './auth/auth.module';
 import { GlobalExceptionFilter } from './common/filters/global-exception.filter';
 import { ResponseInterceptor } from './common/interceptors/response.interceptor';
-
+import { ThrottlerModule, ThrottlerGuard } from '@nestjs/throttler';
 @Module({
   imports: [
     ConfigModule.forRoot({
@@ -24,6 +24,16 @@ import { ResponseInterceptor } from './common/interceptors/response.interceptor'
         JWT_SECRET: Joi.string().required(),
       }),
     }),
+
+    ThrottlerModule.forRoot({
+  throttlers: [
+    {
+      ttl: 60000,
+      limit: 10,
+    },
+  ],
+}),
+    
 
     MongooseModule.forRootAsync({
       imports: [ConfigModule],
@@ -40,15 +50,22 @@ import { ResponseInterceptor } from './common/interceptors/response.interceptor'
 
   controllers: [AppController],
   providers: [
-    AppService,
-    {
-      provide: APP_INTERCEPTOR,
-      useClass: ResponseInterceptor,
-    },
-    {
-      provide: APP_FILTER,
-      useClass: GlobalExceptionFilter,
-    },
-  ],
+  {
+    provide: APP_GUARD,
+    useClass: ThrottlerGuard,
+  },
+
+  AppService,
+
+  {
+    provide: APP_INTERCEPTOR,
+    useClass: ResponseInterceptor,
+  },
+
+  {
+    provide: APP_FILTER,
+    useClass: GlobalExceptionFilter,
+  },
+],
 })
 export class AppModule {}

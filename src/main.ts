@@ -3,15 +3,18 @@ import { ValidationPipe } from '@nestjs/common';
 import { SwaggerModule, DocumentBuilder } from '@nestjs/swagger';
 import helmet from 'helmet';
 import { AppModule } from './app.module';
-
+import mongoSanitize from 'express-mongo-sanitize';
 async function bootstrap() {
   const app = await NestFactory.create(AppModule);
   app.use(helmet());
+// app.use(mongoSanitize()); 
   app.enableCors();
   app.useGlobalPipes(
     new ValidationPipe({
-      transform: true,
-    }),
+  transform: true,
+  whitelist: true,
+  forbidNonWhitelisted: true,
+})
   );
 
   const config = new DocumentBuilder()
